@@ -1,0 +1,252 @@
+import { useState } from "react";
+import { useProducts } from "@/contexts/ProductContext";
+import AdminLayout from "@/components/AdminLayout";
+import { Product, CATEGORIES } from "@/data/products";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+type ProductForm = Omit<Product, "id" | "createdAt">;
+
+const emptyForm: ProductForm = {
+  name: "",
+  description: "",
+  category: CATEGORIES[0],
+  price: null,
+  images: [""],
+  featured: false,
+  inStock: true,
+  socialLinks: { telegram: "", whatsapp: "", messenger: "" },
+};
+
+export default function AdminProducts() {
+  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const [search, setSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ProductForm>(emptyForm);
+
+  const filtered = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (product: Product) => {
+    setEditingId(product.id);
+    setForm({
+      name: product.name,
+      description: product.description,
+      category: product.category,
+      price: product.price,
+      images: product.images.length ? product.images : [""],
+      featured: product.featured,
+      inStock: product.inStock,
+      socialLinks: { ...product.socialLinks },
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = {
+      ...form,
+      images: form.images.filter(Boolean),
+    };
+    if (!cleaned.name.trim()) return toast.error("Product name is required");
+    if (cleaned.images.length === 0) cleaned.images = ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80"];
+
+    if (editingId) {
+      updateProduct(editingId, cleaned);
+      toast.success("Product updated");
+    } else {
+      addProduct(cleaned);
+      toast.success("Product added");
+    }
+    setDialogOpen(false);
+  };
+
+  const confirmDelete = () => {
+    if (deleteId) {
+      deleteProduct(deleteId);
+      toast.success("Product deleted");
+      setDeleteId(null);
+    }
+  };
+
+  return (
+    <AdminLayout>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight mb-1">Products</h1>
+            <p className="text-muted-foreground">{products.length} products in catalog</p>
+          </div>
+          <Button onClick={openAdd} className="gradient-accent text-primary-foreground border-0 hover:opacity-90 active:scale-[0.97] transition-all">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
+
+        <div className="relative max-w-sm mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+        </div>
+
+        <div className="bg-card rounded-xl border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-3 font-medium text-muted-foreground">Product</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground hidden sm:table-cell">Category</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Price</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Status</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                  {filtered.map((product) => (
+                    <motion.tr
+                      key={product.id}
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-muted shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{product.name}</p>
+                            {product.featured && <span className="text-xs text-accent">⭐ Featured</span>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 text-muted-foreground hidden sm:table-cell">{product.category}</td>
+                      <td className="p-3 tabular-nums hidden md:table-cell">{product.price ? `$${product.price}` : "—"}</td>
+                      <td className="p-3 hidden md:table-cell">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.inStock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                          {product.inStock ? "In Stock" : "Out of Stock"}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => openEdit(product)} className="p-2 rounded-lg hover:bg-muted transition-colors active:scale-95">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setDeleteId(product.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors active:scale-95">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">{editingId ? "Edit Product" : "Add Product"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Price</Label>
+                <Input type="number" value={form.price ?? ""} onChange={(e) => setForm({ ...form, price: e.target.value ? Number(e.target.value) : null })} placeholder="Optional" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Image URL</Label>
+              <Input value={form.images[0]} onChange={(e) => setForm({ ...form, images: [e.target.value] })} placeholder="https://..." />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Featured</Label>
+              <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>In Stock</Label>
+              <Switch checked={form.inStock} onCheckedChange={(v) => setForm({ ...form, inStock: v })} />
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <Label className="text-muted-foreground">Social Links</Label>
+              <Input placeholder="Telegram URL" value={form.socialLinks.telegram ?? ""} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, telegram: e.target.value } })} />
+              <Input placeholder="WhatsApp URL" value={form.socialLinks.whatsapp ?? ""} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, whatsapp: e.target.value } })} />
+              <Input placeholder="Messenger URL" value={form.socialLinks.messenger ?? ""} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, messenger: e.target.value } })} />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" className="gradient-accent text-primary-foreground border-0 hover:opacity-90">{editingId ? "Update" : "Add"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this product?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AdminLayout>
+  );
+}
