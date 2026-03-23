@@ -1,16 +1,36 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useProducts } from "@/contexts/ProductContext";
+import UserLayout from "@/components/UserLayout";
+import HeroSection from "@/components/HeroSection";
+import ProductCard from "@/components/ProductCard";
+import { motion } from "framer-motion";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+export default function Index() {
+  const { products } = useProducts();
+  const featured = products.filter((p) => p.featured);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <UserLayout>
+      <HeroSection />
+
+      <section className="py-16">
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <p className="text-sm font-medium uppercase tracking-widest text-accent mb-2">Featured</p>
+            <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-8">Editor's Picks</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featured.map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </UserLayout>
   );
-};
-
-const Index = PlaceholderIndex;
-
-export default Index;
+}
