@@ -2,13 +2,12 @@ import { useState, useMemo } from "react";
 import { useProducts } from "@/contexts/ProductContext";
 import UserLayout from "@/components/UserLayout";
 import ProductCard from "@/components/ProductCard";
-import { CATEGORIES } from "@/data/products";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function Products() {
-  const { products } = useProducts();
+  const { products, categories, loading } = useProducts();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("All");
 
@@ -20,6 +19,18 @@ export default function Products() {
       return matchSearch && matchCat;
     });
   }, [products, search, category]);
+
+  const categoryNames = categories.map((c) => c.name);
+
+  if (loading) {
+    return (
+      <UserLayout>
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </UserLayout>
+    );
+  }
 
   return (
     <UserLayout>
@@ -42,16 +53,11 @@ export default function Products() {
           >
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
             </div>
 
             <div className="flex gap-2 flex-wrap">
-              {["All", ...CATEGORIES].map((cat) => (
+              {["All", ...categoryNames].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}

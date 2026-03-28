@@ -6,7 +6,7 @@ import { Package, Star, TrendingUp, AlertTriangle } from "lucide-react";
 export default function AdminDashboard() {
   const { products } = useProducts();
   const featured = products.filter((p) => p.featured).length;
-  const outOfStock = products.filter((p) => !p.inStock).length;
+  const outOfStock = products.filter((p) => !p.in_stock).length;
 
   const stats = [
     { label: "Total Products", value: products.length, icon: Package, color: "bg-blue-50 text-blue-600" },
@@ -17,11 +17,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="font-display text-3xl font-bold tracking-tight mb-1">Dashboard</h1>
         <p className="text-muted-foreground mb-8">Overview of your product catalog</p>
 
