@@ -1,12 +1,15 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Package, LogOut, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, ChevronLeft, ChevronRight, ShoppingBag, Tag, Image, Settings } from "lucide-react";
 import { useState } from "react";
 
 const sidebarLinks = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/products", label: "Products", icon: Package },
+  { to: "/admin/categories", label: "Categories", icon: Tag },
+  { to: "/admin/media", label: "Media", icon: Image },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -15,8 +18,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/admin/login");
   };
 

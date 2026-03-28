@@ -34,7 +34,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
             </div>
           )}
 
-          {!product.inStock && (
+          {!product.in_stock && (
             <div className="absolute top-3 right-3 bg-foreground/80 text-primary-foreground text-xs font-medium px-2.5 py-1 rounded-full">
               Out of Stock
             </div>

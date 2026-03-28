@@ -27,11 +27,7 @@ export default function ProductDetail() {
     <UserLayout>
       <section className="py-12">
         <div className="container">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
             <Link to="/products" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
               <ArrowLeft className="w-4 h-4" />
               Back to products
@@ -45,11 +41,7 @@ export default function ProductDetail() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="aspect-square rounded-2xl overflow-hidden bg-muted"
             >
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
             </motion.div>
 
             <motion.div
@@ -67,8 +59,8 @@ export default function ProductDetail() {
                     <Star className="w-3 h-3" /> Featured
                   </span>
                 )}
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${product.inStock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                  {product.inStock ? "In Stock" : "Out of Stock"}
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${product.in_stock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                  {product.in_stock ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
 
@@ -81,25 +73,25 @@ export default function ProductDetail() {
               <div className="space-y-3">
                 <p className="text-sm font-medium text-muted-foreground">Contact the seller</p>
                 <div className="flex flex-wrap gap-3">
-                  {product.socialLinks.whatsapp && (
+                  {product.social_whatsapp && (
                     <Button asChild variant="outline" className="active:scale-95 transition-transform">
-                      <a href={`${product.socialLinks.whatsapp}?text=${contactMessage}`} target="_blank" rel="noopener noreferrer">
+                      <a href={`${product.social_whatsapp}?text=${contactMessage}`} target="_blank" rel="noopener noreferrer">
                         <MessageCircle className="w-4 h-4 mr-2" />
                         WhatsApp
                       </a>
                     </Button>
                   )}
-                  {product.socialLinks.telegram && (
+                  {product.social_telegram && (
                     <Button asChild variant="outline" className="active:scale-95 transition-transform">
-                      <a href={product.socialLinks.telegram} target="_blank" rel="noopener noreferrer">
+                      <a href={product.social_telegram} target="_blank" rel="noopener noreferrer">
                         <Send className="w-4 h-4 mr-2" />
                         Telegram
                       </a>
                     </Button>
                   )}
-                  {product.socialLinks.messenger && (
+                  {product.social_messenger && (
                     <Button asChild variant="outline" className="active:scale-95 transition-transform">
-                      <a href={product.socialLinks.messenger} target="_blank" rel="noopener noreferrer">
+                      <a href={product.social_messenger} target="_blank" rel="noopener noreferrer">
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Messenger
                       </a>

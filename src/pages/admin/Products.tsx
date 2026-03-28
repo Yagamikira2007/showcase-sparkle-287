@@ -1,47 +1,51 @@
 import { useState } from "react";
 import { useProducts } from "@/contexts/ProductContext";
 import AdminLayout from "@/components/AdminLayout";
-import { Product, CATEGORIES } from "@/data/products";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import type { Product } from "@/data/products";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type ProductForm = Omit<Product, "id" | "createdAt">;
+interface ProductForm {
+  name: string;
+  description: string;
+  category: string;
+  price: number | null;
+  images: string[];
+  featured: boolean;
+  in_stock: boolean;
+  social_telegram: string;
+  social_whatsapp: string;
+  social_messenger: string;
+}
 
 const emptyForm: ProductForm = {
   name: "",
   description: "",
-  category: CATEGORIES[0],
+  category: "",
   price: null,
   images: [""],
   featured: false,
-  inStock: true,
-  socialLinks: { telegram: "", whatsapp: "", messenger: "" },
+  in_stock: true,
+  social_telegram: "",
+  social_whatsapp: "",
+  social_messenger: "",
 };
 
 export default function AdminProducts() {
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, categories, addProduct, updateProduct, deleteProduct } = useProducts();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -54,7 +58,7 @@ export default function AdminProducts() {
 
   const openAdd = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, category: categories[0]?.name || "" });
     setDialogOpen(true);
   };
 
@@ -67,34 +71,39 @@ export default function AdminProducts() {
       price: product.price,
       images: product.images.length ? product.images : [""],
       featured: product.featured,
-      inStock: product.inStock,
-      socialLinks: { ...product.socialLinks },
+      in_stock: product.in_stock,
+      social_telegram: product.social_telegram || "",
+      social_whatsapp: product.social_whatsapp || "",
+      social_messenger: product.social_messenger || "",
     });
     setDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleaned = {
       ...form,
       images: form.images.filter(Boolean),
+      social_telegram: form.social_telegram || null,
+      social_whatsapp: form.social_whatsapp || null,
+      social_messenger: form.social_messenger || null,
     };
     if (!cleaned.name.trim()) return toast.error("Product name is required");
     if (cleaned.images.length === 0) cleaned.images = ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80"];
 
     if (editingId) {
-      updateProduct(editingId, cleaned);
+      await updateProduct(editingId, cleaned);
       toast.success("Product updated");
     } else {
-      addProduct(cleaned);
+      await addProduct(cleaned);
       toast.success("Product added");
     }
     setDialogOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteId) {
-      deleteProduct(deleteId);
+      await deleteProduct(deleteId);
       toast.success("Product deleted");
       setDeleteId(null);
     }
@@ -154,8 +163,8 @@ export default function AdminProducts() {
                       <td className="p-3 text-muted-foreground hidden sm:table-cell">{product.category}</td>
                       <td className="p-3 tabular-nums hidden md:table-cell">{product.price ? `$${product.price}` : "—"}</td>
                       <td className="p-3 hidden md:table-cell">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.inStock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                          {product.inStock ? "In Stock" : "Out of Stock"}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.in_stock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                          {product.in_stock ? "In Stock" : "Out of Stock"}
                         </span>
                       </td>
                       <td className="p-3">
@@ -199,7 +208,7 @@ export default function AdminProducts() {
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                 >
-                  {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                  {categories.map((cat) => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -217,14 +226,14 @@ export default function AdminProducts() {
             </div>
             <div className="flex items-center justify-between">
               <Label>In Stock</Label>
-              <Switch checked={form.inStock} onCheckedChange={(v) => setForm({ ...form, inStock: v })} />
+              <Switch checked={form.in_stock} onCheckedChange={(v) => setForm({ ...form, in_stock: v })} />
             </div>
 
             <div className="space-y-2 border-t pt-4">
               <Label className="text-muted-foreground">Social Links</Label>
-              <Input placeholder="Telegram URL" value={form.socialLinks.telegram ?? ""} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, telegram: e.target.value } })} />
-              <Input placeholder="WhatsApp URL" value={form.socialLinks.whatsapp ?? ""} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, whatsapp: e.target.value } })} />
-              <Input placeholder="Messenger URL" value={form.socialLinks.messenger ?? ""} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, messenger: e.target.value } })} />
+              <Input placeholder="Telegram URL" value={form.social_telegram} onChange={(e) => setForm({ ...form, social_telegram: e.target.value })} />
+              <Input placeholder="WhatsApp URL" value={form.social_whatsapp} onChange={(e) => setForm({ ...form, social_whatsapp: e.target.value })} />
+              <Input placeholder="Messenger URL" value={form.social_messenger} onChange={(e) => setForm({ ...form, social_messenger: e.target.value })} />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

@@ -5,18 +5,22 @@ import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Lock, User } from "lucide-react";
+import { Lock, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(username, password)) {
+    setLoading(true);
+    const success = await login(username, password);
+    setLoading(false);
+    if (success) {
       toast.success("Welcome back!");
       navigate("/admin/dashboard");
     } else {
@@ -55,7 +59,8 @@ export default function AdminLogin() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="pl-10" required />
             </div>
           </div>
-          <Button type="submit" className="w-full gradient-accent text-primary-foreground border-0 hover:opacity-90 active:scale-[0.97] transition-all">
+          <Button type="submit" disabled={loading} className="w-full gradient-accent text-primary-foreground border-0 hover:opacity-90 active:scale-[0.97] transition-all">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Sign In
           </Button>
         </form>
