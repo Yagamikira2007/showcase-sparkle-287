@@ -46,6 +46,7 @@ export type Database = {
           social_messenger: string | null
           social_telegram: string | null
           social_whatsapp: string | null
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           social_messenger?: string | null
           social_telegram?: string | null
           social_whatsapp?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -76,7 +78,29 @@ export type Database = {
           social_messenger?: string | null
           social_telegram?: string | null
           social_whatsapp?: string | null
+          sort_order?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }

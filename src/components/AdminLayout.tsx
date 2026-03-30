@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Package, LogOut, ChevronLeft, ChevronRight, ShoppingBag, Tag, Image, Settings } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { LayoutDashboard, Package, LogOut, ChevronLeft, ChevronRight, ShoppingBag, Tag, Image, Settings, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 
 const sidebarLinks = [
@@ -16,6 +17,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
@@ -24,7 +26,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background text-foreground transition-colors duration-300">
       <aside className={`${collapsed ? "w-16" : "w-60"} bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 shrink-0`}>
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
           {!collapsed && (
@@ -63,7 +65,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="p-2 border-t border-sidebar-border">
+        <div className="p-2 border-t border-sidebar-border space-y-1">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+          >
+            {theme === "light" ? <Moon className="w-4 h-4 shrink-0" /> : <Sun className="w-4 h-4 shrink-0" />}
+            {!collapsed && <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>}
+          </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:text-red-400 hover:bg-sidebar-accent/50 transition-colors"

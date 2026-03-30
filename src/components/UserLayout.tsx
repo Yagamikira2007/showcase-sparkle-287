@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingBag, Menu, X } from "lucide-react";
 import { useState } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -14,7 +15,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <header className="sticky top-0 z-50 glass-card border-b">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
@@ -24,34 +25,36 @@ export default function UserLayout({ children }: { children: ReactNode }) {
             <span className="font-display text-xl font-semibold tracking-tight">Showcase</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`text-sm font-medium transition-colors relative py-1 ${
-                  location.pathname === link.to
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {link.label}
-                {location.pathname === link.to && (
-                  <motion.div
-                    layoutId="nav-underline"
-                    className="absolute -bottom-0.5 left-0 right-0 h-0.5 gradient-accent rounded-full"
-                  />
-                )}
-              </Link>
-            ))}
-          </nav>
-
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors active:scale-95"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <nav className="hidden md:flex items-center gap-8 mr-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`text-sm font-medium transition-colors relative py-1 ${
+                    location.pathname === link.to
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {link.label}
+                  {location.pathname === link.to && (
+                    <motion.div
+                      layoutId="nav-underline"
+                      className="absolute -bottom-0.5 left-0 right-0 h-0.5 gradient-accent rounded-full"
+                    />
+                  )}
+                </Link>
+              ))}
+            </nav>
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors active:scale-95"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {mobileOpen && (

@@ -5,11 +5,18 @@ import ProductCard from "@/components/ProductCard";
 import { motion } from "framer-motion";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination, PaginationContent, PaginationItem,
+  PaginationLink, PaginationNext, PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 9;
 
 export default function Products() {
   const { products, categories, loading } = useProducts();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("All");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -20,7 +27,15 @@ export default function Products() {
     });
   }, [products, search, category]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const categoryNames = categories.map((c) => c.name);
+
+  // Reset page when filters change
+  const handleSearch = (val: string) => { setSearch(val); setPage(1); };
+  const handleCategory = (cat: string) => { setCategory(cat); setPage(1); };
 
   if (loading) {
     return (
@@ -53,14 +68,14 @@ export default function Products() {
           >
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+              <Input placeholder="Search products..." value={search} onChange={(e) => handleSearch(e.target.value)} className="pl-10" />
             </div>
 
             <div className="flex gap-2 flex-wrap">
               {["All", ...categoryNames].map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setCategory(cat)}
+                  onClick={() => handleCategory(cat)}
                   className={`px-3 py-1.5 text-sm rounded-full transition-all active:scale-95 ${
                     category === cat
                       ? "gradient-accent text-primary-foreground"
@@ -78,11 +93,45 @@ export default function Products() {
               <p className="text-muted-foreground">No products found. Try a different search or category.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginated.map((product, i) => (
+                  <ProductCard key={product.id} product={product} index={i} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-10">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                        <PaginationItem key={p}>
+                          <PaginationLink
+                            isActive={p === currentPage}
+                            onClick={() => setPage(p)}
+                            className="cursor-pointer"
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

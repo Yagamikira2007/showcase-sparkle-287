@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useProducts } from "@/contexts/ProductContext";
 import AdminLayout from "@/components/AdminLayout";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { Plus, Pencil, Trash2, Search, GripVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,7 @@ interface ProductForm {
   images: string[];
   featured: boolean;
   in_stock: boolean;
+  sort_order: number;
   social_telegram: string;
   social_whatsapp: string;
   social_messenger: string;
@@ -39,18 +40,21 @@ const emptyForm: ProductForm = {
   images: [""],
   featured: false,
   in_stock: true,
+  sort_order: 0,
   social_telegram: "",
   social_whatsapp: "",
   social_messenger: "",
 };
 
 export default function AdminProducts() {
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, categories, addProduct, updateProduct, deleteProduct, reorderProducts } = useProducts();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -58,7 +62,7 @@ export default function AdminProducts() {
 
   const openAdd = () => {
     setEditingId(null);
-    setForm({ ...emptyForm, category: categories[0]?.name || "" });
+    setForm({ ...emptyForm, category: categories[0]?.name || "", sort_order: products.length });
     setDialogOpen(true);
   };
 
@@ -72,6 +76,7 @@ export default function AdminProducts() {
       images: product.images.length ? product.images : [""],
       featured: product.featured,
       in_stock: product.in_stock,
+      sort_order: product.sort_order,
       social_telegram: product.social_telegram || "",
       social_whatsapp: product.social_whatsapp || "",
       social_messenger: product.social_messenger || "",
@@ -109,6 +114,17 @@ export default function AdminProducts() {
     }
   };
 
+  const startReorder = () => {
+    setReorderMode(true);
+    setOrderedIds(products.map((p) => p.id));
+  };
+
+  const saveOrder = async () => {
+    await reorderProducts(orderedIds);
+    toast.success("Order saved");
+    setReorderMode(false);
+  };
+
   return (
     <AdminLayout>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -117,73 +133,109 @@ export default function AdminProducts() {
             <h1 className="font-display text-3xl font-bold tracking-tight mb-1">Products</h1>
             <p className="text-muted-foreground">{products.length} products in catalog</p>
           </div>
-          <Button onClick={openAdd} className="gradient-accent text-primary-foreground border-0 hover:opacity-90 active:scale-[0.97] transition-all">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Product
-          </Button>
-        </div>
-
-        <div className="relative max-w-sm mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-        </div>
-
-        <div className="bg-card rounded-xl border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Product</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground hidden sm:table-cell">Category</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Price</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Status</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {filtered.map((product) => (
-                    <motion.tr
-                      key={product.id}
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="p-3">
-                        <div className="flex items-center gap-3">
-                          <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-muted shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{product.name}</p>
-                            {product.featured && <span className="text-xs text-accent">⭐ Featured</span>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3 text-muted-foreground hidden sm:table-cell">{product.category}</td>
-                      <td className="p-3 tabular-nums hidden md:table-cell">{product.price ? `$${product.price}` : "—"}</td>
-                      <td className="p-3 hidden md:table-cell">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.in_stock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                          {product.in_stock ? "In Stock" : "Out of Stock"}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex justify-end gap-1">
-                          <button onClick={() => openEdit(product)} className="p-2 rounded-lg hover:bg-muted transition-colors active:scale-95">
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeleteId(product.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors active:scale-95">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
+          <div className="flex gap-2">
+            {reorderMode ? (
+              <>
+                <Button variant="outline" onClick={() => setReorderMode(false)}>Cancel</Button>
+                <Button onClick={saveOrder} className="gradient-accent text-primary-foreground border-0">Save Order</Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={startReorder} disabled={products.length < 2}>
+                  <GripVertical className="w-4 h-4 mr-2" />
+                  Reorder
+                </Button>
+                <Button onClick={openAdd} className="gradient-accent text-primary-foreground border-0 hover:opacity-90 active:scale-[0.97] transition-all">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </>
+            )}
           </div>
         </div>
+
+        {!reorderMode && (
+          <div className="relative max-w-sm mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+        )}
+
+        {reorderMode ? (
+          <Reorder.Group axis="y" values={orderedIds} onReorder={setOrderedIds} className="space-y-2">
+            {orderedIds.map((id) => {
+              const product = products.find((p) => p.id === id);
+              if (!product) return null;
+              return (
+                <Reorder.Item key={id} value={id} className="bg-card rounded-xl p-4 border cursor-grab active:cursor-grabbing flex items-center gap-4 hover:shadow-md transition-shadow">
+                  <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <img src={product.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover bg-muted shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.category}</p>
+                  </div>
+                </Reorder.Item>
+              );
+            })}
+          </Reorder.Group>
+        ) : (
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-3 font-medium text-muted-foreground">Product</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground hidden sm:table-cell">Category</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Price</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Status</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <AnimatePresence>
+                    {filtered.map((product) => (
+                      <motion.tr
+                        key={product.id}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <img src={product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-muted shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{product.name}</p>
+                              {product.featured && <span className="text-xs text-accent">⭐ Featured</span>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 text-muted-foreground hidden sm:table-cell">{product.category}</td>
+                        <td className="p-3 tabular-nums hidden md:table-cell">{product.price ? `$${product.price}` : "—"}</td>
+                        <td className="p-3 hidden md:table-cell">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.in_stock ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                            {product.in_stock ? "In Stock" : "Out of Stock"}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex justify-end gap-1">
+                            <button onClick={() => openEdit(product)} className="p-2 rounded-lg hover:bg-muted transition-colors active:scale-95">
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setDeleteId(product.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors active:scale-95">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </motion.div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -15,6 +15,7 @@ interface ProductContextType {
   deleteCategory: (id: string) => Promise<void>;
   refreshProducts: () => Promise<void>;
   refreshCategories: () => Promise<void>;
+  reorderProducts: (ids: string[]) => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | null>(null);
@@ -28,6 +29,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase
       .from("products")
       .select("*")
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (data) setProducts(data);
   }, []);
@@ -76,12 +78,18 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     await refreshCategories();
   };
 
+  const reorderProducts = async (ids: string[]) => {
+    const updates = ids.map((id, i) => supabase.from("products").update({ sort_order: i }).eq("id", id));
+    await Promise.all(updates);
+    await refreshProducts();
+  };
+
   return (
     <ProductContext.Provider value={{
       products, categories, loading,
       addProduct, updateProduct, deleteProduct, getProduct,
       addCategory, updateCategory, deleteCategory,
-      refreshProducts, refreshCategories,
+      refreshProducts, refreshCategories, reorderProducts,
     }}>
       {children}
     </ProductContext.Provider>
