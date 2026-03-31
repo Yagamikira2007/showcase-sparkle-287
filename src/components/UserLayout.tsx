@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ShoppingBag, Menu, X } from "lucide-react";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -13,6 +14,7 @@ const navLinks = [
 export default function UserLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { navbarSettings, footerSettings } = useSiteSettings();
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
@@ -22,7 +24,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
             <div className="w-9 h-9 rounded-lg gradient-accent flex items-center justify-center">
               <ShoppingBag className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display text-xl font-semibold tracking-tight">Showcase</span>
+            <span className="font-display text-xl font-semibold tracking-tight">{navbarSettings.brand_name}</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -32,22 +34,17 @@ export default function UserLayout({ children }: { children: ReactNode }) {
                   key={link.to}
                   to={link.to}
                   className={`text-sm font-medium transition-colors relative py-1 ${
-                    location.pathname === link.to
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                    location.pathname === link.to ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {link.label}
                   {location.pathname === link.to && (
-                    <motion.div
-                      layoutId="nav-underline"
-                      className="absolute -bottom-0.5 left-0 right-0 h-0.5 gradient-accent rounded-full"
-                    />
+                    <motion.div layoutId="nav-underline" className="absolute -bottom-0.5 left-0 right-0 h-0.5 gradient-accent rounded-full" />
                   )}
                 </Link>
               ))}
             </nav>
-            <ThemeToggle />
+            {navbarSettings.show_theme_toggle && <ThemeToggle />}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors active:scale-95"
@@ -58,22 +55,11 @@ export default function UserLayout({ children }: { children: ReactNode }) {
         </div>
 
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden border-t">
             <nav className="container py-4 flex flex-col gap-2">
               {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === link.to ? "bg-muted text-foreground" : "text-muted-foreground"
-                  }`}
-                >
+                <Link key={link.to} to={link.to} onClick={() => setMobileOpen(false)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.to ? "bg-muted text-foreground" : "text-muted-foreground"}`}>
                   {link.label}
                 </Link>
               ))}
@@ -86,7 +72,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
 
       <footer className="border-t py-8 mt-16">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Showcase. All rights reserved.</p>
+          <p>{footerSettings.text}</p>
         </div>
       </footer>
     </div>

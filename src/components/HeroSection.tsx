@@ -2,8 +2,11 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
 export default function HeroSection() {
+  const { heroContent } = useSiteSettings();
+
   return (
     <section className="relative overflow-hidden py-24 md:py-32 lg:py-40">
       <div className="absolute inset-0 -z-10">
@@ -19,7 +22,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm font-medium uppercase tracking-widest text-accent mb-4"
           >
-            Curated Collection
+            {heroContent.subtitle}
           </motion.p>
 
           <motion.h1
@@ -28,9 +31,9 @@ export default function HeroSection() {
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]"
           >
-            Discover Products
+            {heroContent.title}
             <br />
-            <span className="text-gradient">Worth Having</span>
+            <span className="text-gradient">{heroContent.title_highlight}</span>
           </motion.h1>
 
           <motion.p
@@ -39,8 +42,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed"
           >
-            A handpicked selection of premium products. Browse freely, 
-            connect directly with the seller when you find something you love.
+            {heroContent.description}
           </motion.p>
 
           <motion.div
@@ -50,8 +52,8 @@ export default function HeroSection() {
             className="mt-8 flex flex-wrap gap-4"
           >
             <Button asChild size="lg" className="gradient-accent text-primary-foreground border-0 hover:opacity-90 active:scale-[0.97] transition-all">
-              <Link to="/products">
-                Browse Products
+              <Link to={heroContent.button_link}>
+                {heroContent.button_text}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
